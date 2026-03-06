@@ -28,15 +28,6 @@ export interface CC0StrategyConfig {
 // TOKEN DEPLOYMENT
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-export interface AirdropConfig {
-  /** Enable airdrop to a recipient */
-  enabled: boolean;
-  /** Basis points (100 = 1%) - defaults to 100 */
-  bps?: number;
-  /** Recipient address - defaults to deployer */
-  recipient?: Address;
-}
-
 export interface DeployTokenParams {
   /** Token name */
   name: string;
@@ -48,8 +39,6 @@ export interface DeployTokenParams {
   image: string;
   /** Optional: Token description/metadata */
   description?: string;
-  /** Optional: Airdrop configuration */
-  airdrop?: AirdropConfig;
   /** Optional: Custom salt (will be mined if not provided on Base) */
   salt?: Hex;
 }
