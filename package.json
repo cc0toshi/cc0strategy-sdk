@@ -1,6 +1,6 @@
 {
   "name": "cc0strategy-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SDK for deploying cc0strategy tokens from external websites",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
