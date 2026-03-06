@@ -1,0 +1,50 @@
+{
+  "name": "@cc0strategy/sdk",
+  "version": "1.0.0",
+  "description": "SDK for deploying cc0strategy tokens from external websites",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "cc0strategy",
+    "nft",
+    "token",
+    "erc20",
+    "uniswap",
+    "v4",
+    "ethereum",
+    "base"
+  ],
+  "author": "cc0strategy",
+  "license": "MIT",
+  "peerDependencies": {
+    "viem": ">=2.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "viem": "^2.21.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cc0toshi/cc0strategy-sdk.git"
+  },
+  "homepage": "https://cc0strategy.fun"
+}
