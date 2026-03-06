@@ -29,20 +29,11 @@ export interface CC0StrategyConfig {
 // ═══════════════════════════════════════════════════════════════════════════════════
 
 export interface AirdropConfig {
-  /** Enable 1% airdrop to a recipient */
+  /** Enable airdrop to a recipient */
   enabled: boolean;
   /** Basis points (100 = 1%) - defaults to 100 */
   bps?: number;
   /** Recipient address - defaults to deployer */
-  recipient?: Address;
-}
-
-export interface DevBuyConfig {
-  /** ETH amount to buy tokens with at launch */
-  ethAmount: string;
-  /** Minimum tokens to receive (slippage protection) - defaults to 0 */
-  minTokensOut?: bigint;
-  /** Recipient of purchased tokens - defaults to deployer */
   recipient?: Address;
 }
 
@@ -59,8 +50,6 @@ export interface DeployTokenParams {
   description?: string;
   /** Optional: Airdrop configuration */
   airdrop?: AirdropConfig;
-  /** Optional: Initial dev buy configuration */
-  devBuy?: DevBuyConfig;
   /** Optional: Custom salt (will be mined if not provided on Base) */
   salt?: Hex;
 }
