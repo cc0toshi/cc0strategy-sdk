@@ -41,6 +41,9 @@ const TICK_UPPER = 887200;
 const STARTING_TICK = -230400;
 const TICK_SPACING = 200;
 
+// Airdrop configuration - MANDATORY 1% to deployer
+const AIRDROP_BPS = 100; // 1% = 100 basis points
+
 /**
  * CC0Strategy SDK for deploying and interacting with cc0strategy tokens
  */
@@ -80,7 +83,7 @@ export class CC0Strategy {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   /**
-   * Deploy a new token
+   * Deploy a new token with automatic 1% airdrop to deployer
    */
   async deployToken(
     params: DeployTokenParams,
@@ -227,8 +230,8 @@ export class CC0Strategy {
       mevModuleData: '0x' as Hex,
     };
 
-    // Build extensions
-    const extensionConfigs = this.buildExtensionConfigs(params, deployer);
+    // Build extension configs - 1% airdrop is MANDATORY
+    const extensionConfigs = this.buildExtensionConfigs(deployer);
 
     return {
       tokenConfig,
@@ -241,9 +244,9 @@ export class CC0Strategy {
   }
 
   /**
-   * Build extension configurations for airdrop
+   * Build extension configurations - 1% airdrop is always included
    */
-  private buildExtensionConfigs(params: DeployTokenParams, deployer: Address) {
+  private buildExtensionConfigs(deployer: Address) {
     const extensionConfigs: Array<{
       extension: Address;
       msgValue: bigint;
@@ -251,20 +254,17 @@ export class CC0Strategy {
       extensionData: Hex;
     }> = [];
 
-    // Airdrop extension
-    if (params.airdrop?.enabled) {
-      const recipient = params.airdrop.recipient || deployer;
-      const bps = params.airdrop.bps || 100; // Default 1%
-      
+    // 1% Airdrop to deployer - ALWAYS included, not configurable
+    if (this.contracts.SIMPLE_AIRDROP) {
       const airdropData = encodeAbiParameters(
         parseAbiParameters('address'),
-        [recipient]
+        [deployer]
       );
       
       extensionConfigs.push({
         extension: this.contracts.SIMPLE_AIRDROP,
         msgValue: 0n,
-        extensionBps: bps,
+        extensionBps: AIRDROP_BPS,
         extensionData: airdropData,
       });
     }
