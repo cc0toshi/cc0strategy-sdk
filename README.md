@@ -32,9 +32,12 @@ const result = await sdk.deployToken({
   name: 'My Token',
   symbol: 'MTK',
   nftCollection: '0x5c5d3cbaf7a3419af8e6661486b2d5ec3accfb1b',
-  image: 'ipfs://...',
-  airdrop: { enabled: true, bps: 100 }, // 1% airdrop
-  devBuy: { ethAmount: '0.01' }, // Initial buy
+  image: 'ipfs://QmYourImageHash',
+  description: 'My awesome token',
+  airdrop: {
+    enabled: true,
+    bps: 100, // 1% airdrop to deployer
+  },
 });
 
 console.log('Token deployed:', result.tokenAddress);
@@ -42,28 +45,26 @@ console.log('Token deployed:', result.tokenAddress);
 
 ## Features
 
-- **Multi-chain support**: Base (8453) and Ethereum (1)
-- **wagmi compatible**: Works with viem WalletClient
-- **TypeScript**: Full type exports
-- **Extensions**: SimpleAirdrop and EthDevBuy support
-- **Salt Mining**: Automatic on Base for correct pool ordering
+- **Deploy Tokens** - Create new ERC-20 tokens linked to NFT collections
+- **Airdrop Extension** - Optionally airdrop a percentage of supply to the deployer
+- **Multi-chain** - Supports both Base and Ethereum mainnet
+- **Fee Distribution** - Trading fees automatically flow to NFT holders
+- **Claim Rewards** - Helper methods for claiming WETH rewards
 
 ## API Reference
 
-### CC0Strategy Class
-
-#### Constructor
+### Constructor
 
 ```typescript
 const sdk = new CC0Strategy({
   chain: 'base' | 'ethereum',
   walletClient: WalletClient,
   publicClient?: PublicClient, // Optional, created automatically
-  indexerUrl?: string, // Custom indexer URL
+  indexerUrl?: string, // Optional, defaults to official indexer
 });
 ```
 
-#### deployToken()
+### deployToken
 
 Deploy a new token linked to an NFT collection.
 
@@ -76,16 +77,11 @@ const result = await sdk.deployToken({
   description?: string,
   airdrop?: {
     enabled: boolean,
-    bps?: number, // Default: 100 (1%)
+    bps?: number, // Basis points (100 = 1%), default 100
     recipient?: Address, // Default: deployer
   },
-  devBuy?: {
-    ethAmount: string, // ETH to buy tokens with
-    minTokensOut?: bigint, // Slippage protection
-    recipient?: Address, // Default: deployer
-  },
-  salt?: Hex, // Custom salt (auto-mined on Base)
-}, onMiningProgress?: (progress: SaltMiningProgress) => void);
+  salt?: Hex, // Optional, auto-mined on Base
+});
 
 // Returns:
 {
@@ -96,132 +92,53 @@ const result = await sdk.deployToken({
 }
 ```
 
-#### getCollections()
+### getCollections
 
 Fetch available NFT collections.
 
 ```typescript
 const collections = await sdk.getCollections();
-// Returns: Collection[]
 ```
 
-#### getTokensByCollection()
+### getTokensByCollection
 
 Get tokens deployed for a specific NFT collection.
 
 ```typescript
 const tokens = await sdk.getTokensByCollection('0x...');
-// Returns: Token[]
 ```
 
-#### getClaimableRewards()
+### claimRewards
 
-Check claimable WETH rewards for NFT holders.
-
-```typescript
-const rewards = await sdk.getClaimableRewards(
-  tokenAddress,
-  ['1', '2', '3'] // NFT token IDs
-);
-// Returns: ClaimableRewards[]
-```
-
-#### claimRewards()
-
-Claim WETH rewards for owned NFTs.
+Claim WETH rewards for NFT token IDs.
 
 ```typescript
 const result = await sdk.claimRewards(
   tokenAddress,
   ['1', '2', '3'] // NFT token IDs
 );
-// Returns: ClaimRewardsResult
 ```
 
-#### checkNFTOwnership()
+### getClaimableRewards
 
-Check if a wallet owns NFTs from a collection.
+Check claimable WETH amounts for specific NFT token IDs.
 
 ```typescript
-const { owns, balance } = await sdk.checkNFTOwnership(nftCollection);
+const rewards = await sdk.getClaimableRewards(tokenAddress, ['1', '2', '3']);
 ```
 
-## Wagmi Integration
+## Supported Chains
 
-```typescript
-import { CC0Strategy } from 'cc0strategy-sdk';
-import { useWalletClient } from 'wagmi';
+| Chain | Chain ID | Factory |
+|-------|----------|---------|
+| Base | 8453 | `0xDbbC0A64fFe2a23b4543b0731CF61ef0d5d4E265` |
+| Ethereum | 1 | `0x1dc68bc05ecb132059fb45b281dbfa92b6fab610` |
 
-function DeployButton() {
-  const { data: walletClient } = useWalletClient();
-  
-  const handleDeploy = async () => {
-    if (!walletClient) return;
-    
-    const sdk = new CC0Strategy({
-      chain: 'base',
-      walletClient,
-    });
-    
-    const result = await sdk.deployToken({
-      name: 'My Token',
-      symbol: 'MTK',
-      nftCollection: '0x...',
-      image: 'ipfs://...',
-    });
-    
-    console.log('Deployed:', result.tokenAddress);
-  };
-  
-  return <button onClick={handleDeploy}>Deploy Token</button>;
-}
-```
+## Links
 
-## Salt Mining (Base)
-
-On Base, the SDK automatically mines a salt to ensure the token address is less than WETH. This is required for correct Uniswap V4 pool ordering.
-
-```typescript
-const result = await sdk.deployToken(
-  { /* params */ },
-  (progress) => {
-    console.log(`Mining: ${progress.checked} salts checked (${progress.elapsed}ms)`);
-  }
-);
-```
-
-## Contract Addresses
-
-### Base (8453)
-- Factory: `0xDbbC0A64fFe2a23b4543b0731CF61ef0d5d4E265`
-- FeeDistributor: `0x498bcfdbd724989fc37259faba75168c8f47080d`
-- Hook: `0x5eE3602f499cFEAa4E13D27b4F7D2661906b28cC`
-- SimpleAirdrop: `0x30372aa1c56a145929de3b12a0a49026c9aab946`
-- EthDevBuy: `0x3b11827c7280ad61ad244e955d6434af74d85980`
-
-### Ethereum (1)
-- Factory: `0x1dc68bc05ecb132059fb45b281dbfa92b6fab610`
-- FeeDistributor: `0xdcfb59f2d41c58a1325b270c2f402c1884338d0d`
-- Hook: `0xEfd2F889eD9d7A2Bf6B6C9c2b20c5AEb6EBEe8Cc`
-- SimpleAirdrop: `0x5e41c22a07ba9e1ae0f3d31fcb7cd80979c9e91c`
-- EthDevBuy: `0x1aae5c9dc83add5ba918524a8f02b2c65fd62bec`
-
-## Types
-
-```typescript
-import type {
-  CC0StrategyConfig,
-  SupportedChain,
-  DeployTokenParams,
-  DeployTokenResult,
-  AirdropConfig,
-  DevBuyConfig,
-  Collection,
-  Token,
-  ClaimableRewards,
-  SaltMiningProgress,
-} from 'cc0strategy-sdk';
-```
+- **Website**: https://cc0strategy.fun
+- **Docs**: https://cc0strategy.fun/docs
+- **GitHub**: https://github.com/cc0toshi/cc0strategy-sdk
 
 ## License
 
