@@ -1,17 +1,17 @@
-# @cc0strategy/sdk
+# cc0strategy-sdk
 
 SDK for deploying cc0strategy tokens from external websites. Deploy ERC-20 tokens linked to NFT collections with trading fees flowing to NFT holders.
 
 ## Installation
 
 ```bash
-npm install @cc0strategy/sdk viem
+npm install cc0strategy-sdk viem
 ```
 
 ## Quick Start
 
 ```typescript
-import { CC0Strategy } from '@cc0strategy/sdk';
+import { CC0Strategy } from 'cc0strategy-sdk';
 import { createWalletClient, custom } from 'viem';
 import { base } from 'viem/chains';
 
@@ -149,7 +149,7 @@ const { owns, balance } = await sdk.checkNFTOwnership(nftCollection);
 ## Wagmi Integration
 
 ```typescript
-import { CC0Strategy } from '@cc0strategy/sdk';
+import { CC0Strategy } from 'cc0strategy-sdk';
 import { useWalletClient } from 'wagmi';
 
 function DeployButton() {
@@ -220,7 +220,7 @@ import type {
   Token,
   ClaimableRewards,
   SaltMiningProgress,
-} from '@cc0strategy/sdk';
+} from 'cc0strategy-sdk';
 ```
 
 ## License
