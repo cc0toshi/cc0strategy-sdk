@@ -1,7 +1,6 @@
 import {
   createPublicClient,
   http,
-  parseEther,
   encodeAbiParameters,
   parseAbiParameters,
   decodeEventLog,
@@ -128,7 +127,6 @@ export class CC0Strategy {
 
     // Build deployment config
     const deploymentConfig = this.buildDeploymentConfig(params, salt, deployer);
-    const totalValue = this.calculateTotalValue(params);
 
     // Execute deployment
     const txHash = await this.walletClient.writeContract({
@@ -136,7 +134,7 @@ export class CC0Strategy {
       abi: FACTORY_ABI,
       functionName: 'deployToken',
       args: [deploymentConfig],
-      value: totalValue,
+      value: 0n,
       chain: this.chain === 'base' ? base : mainnet,
       account,
     });
@@ -243,7 +241,7 @@ export class CC0Strategy {
   }
 
   /**
-   * Build extension configurations for airdrop and dev buy
+   * Build extension configurations for airdrop
    */
   private buildExtensionConfigs(params: DeployTokenParams, deployer: Address) {
     const extensionConfigs: Array<{
@@ -271,47 +269,7 @@ export class CC0Strategy {
       });
     }
 
-    // Dev buy extension
-    if (params.devBuy && parseFloat(params.devBuy.ethAmount) > 0) {
-      const recipient = params.devBuy.recipient || deployer;
-      const minOut = params.devBuy.minTokensOut || 0n;
-      
-      // DevBuy extension data: pairedTokenPoolKey, pairedTokenAmountOutMinimum, recipient
-      const devBuyData = encodeAbiParameters(
-        parseAbiParameters('(address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks) pairedTokenPoolKey, uint128 pairedTokenAmountOutMinimum, address recipient'),
-        [
-          {
-            currency0: '0x0000000000000000000000000000000000000000' as Address,
-            currency1: '0x0000000000000000000000000000000000000000' as Address,
-            fee: 0,
-            tickSpacing: 0,
-            hooks: '0x0000000000000000000000000000000000000000' as Address,
-          },
-          minOut,
-          recipient,
-        ]
-      );
-      
-      extensionConfigs.push({
-        extension: this.contracts.ETH_DEV_BUY,
-        msgValue: parseEther(params.devBuy.ethAmount),
-        extensionBps: 0,
-        extensionData: devBuyData,
-      });
-    }
-
     return extensionConfigs;
-  }
-
-  /**
-   * Calculate total ETH value needed for deployment
-   */
-  private calculateTotalValue(params: DeployTokenParams): bigint {
-    let total = 0n;
-    if (params.devBuy && parseFloat(params.devBuy.ethAmount) > 0) {
-      total += parseEther(params.devBuy.ethAmount);
-    }
-    return total;
   }
 
   /**
