@@ -126,7 +126,10 @@ Every token deployed via cc0strategy has:
 
 - **Total Supply:** 100 billion tokens
 - **1% Deployer Airdrop:** Automatic, mandatory
-- **0.8% Trading Fees:** Distributed to NFT holders
+- **6.9% Trading Fees:** On every swap
+  - 80% → NFT holders as WETH rewards
+  - 10% → Treasury
+  - 10% → $cc0company buyback & burn
 - **Ownership:** Renounced (fully decentralized)
 
 ## Supported Chains
