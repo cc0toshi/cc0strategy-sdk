@@ -34,10 +34,6 @@ const result = await sdk.deployToken({
   nftCollection: '0x5c5d3cbaf7a3419af8e6661486b2d5ec3accfb1b',
   image: 'ipfs://QmYourImageHash',
   description: 'My awesome token',
-  airdrop: {
-    enabled: true,
-    bps: 100, // 1% airdrop to deployer
-  },
 });
 
 console.log('Token deployed:', result.tokenAddress);
@@ -46,7 +42,7 @@ console.log('Token deployed:', result.tokenAddress);
 ## Features
 
 - **Deploy Tokens** - Create new ERC-20 tokens linked to NFT collections
-- **Airdrop Extension** - Optionally airdrop a percentage of supply to the deployer
+- **Automatic 1% Airdrop** - Deployer automatically receives 1% of token supply
 - **Multi-chain** - Supports both Base and Ethereum mainnet
 - **Fee Distribution** - Trading fees automatically flow to NFT holders
 - **Claim Rewards** - Helper methods for claiming WETH rewards
@@ -66,7 +62,7 @@ const sdk = new CC0Strategy({
 
 ### deployToken
 
-Deploy a new token linked to an NFT collection.
+Deploy a new token linked to an NFT collection. The deployer automatically receives 1% of the token supply.
 
 ```typescript
 const result = await sdk.deployToken({
@@ -75,11 +71,6 @@ const result = await sdk.deployToken({
   nftCollection: Address,
   image: string, // IPFS URL recommended
   description?: string,
-  airdrop?: {
-    enabled: boolean,
-    bps?: number, // Basis points (100 = 1%), default 100
-    recipient?: Address, // Default: deployer
-  },
   salt?: Hex, // Optional, auto-mined on Base
 });
 
@@ -91,6 +82,8 @@ const result = await sdk.deployToken({
   blockNumber: bigint,
 }
 ```
+
+> **Note:** Every deployment automatically includes a 1% airdrop to the deployer. This is mandatory and not configurable.
 
 ### getCollections
 
@@ -126,6 +119,15 @@ Check claimable WETH amounts for specific NFT token IDs.
 ```typescript
 const rewards = await sdk.getClaimableRewards(tokenAddress, ['1', '2', '3']);
 ```
+
+## Tokenomics
+
+Every token deployed via cc0strategy has:
+
+- **Total Supply:** 100 billion tokens
+- **1% Deployer Airdrop:** Automatic, mandatory
+- **0.8% Trading Fees:** Distributed to NFT holders
+- **Ownership:** Renounced (fully decentralized)
 
 ## Supported Chains
 
