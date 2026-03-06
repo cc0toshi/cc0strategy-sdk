@@ -11,7 +11,6 @@ export type {
   // Deployment
   DeployTokenParams,
   DeployTokenResult,
-  AirdropConfig,
   
   // Salt Mining
   SaltMiningProgress,
