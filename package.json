@@ -1,5 +1,5 @@
 {
-  "name": "@cc0strategy/sdk",
+  "name": "cc0strategy-sdk",
   "version": "1.0.0",
   "description": "SDK for deploying cc0strategy tokens from external websites",
   "main": "dist/index.js",
