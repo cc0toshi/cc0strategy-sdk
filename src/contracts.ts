@@ -245,3 +245,57 @@ export function getChainFromId(chainId: number): SupportedChain | null {
   if (chainId === 1) return 'ethereum';
   return null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// USDC ADDRESSES
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+export const USDC_ADDRESSES = {
+  base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as Address,
+  ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address,
+} as const;
+
+// Collection listing fee
+export const LISTING_FEE_USDC = 10_000n; // 0.01 USDC (TESTING)
+export const LISTING_RECIPIENT = '0x58e510F849e38095375a3e478ad1d719650B8557' as Address;
+
+// ERC20 ABI (minimal for approve + transfer)
+export const ERC20_ABI = [
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+  },
+] as const;
