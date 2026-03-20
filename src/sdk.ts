@@ -15,6 +15,10 @@ import {
   FACTORY_ABI,
   FEE_DISTRIBUTOR_ABI,
   ERC721_ABI,
+  ERC20_ABI,
+  USDC_ADDRESSES,
+  LISTING_FEE_USDC,
+  LISTING_RECIPIENT,
   getContracts,
   getChainId,
 } from './contracts';
@@ -31,8 +35,10 @@ import type {
   ClaimableRewards,
   ClaimRewardsResult,
   SaltMiningProgress,
+  ListCollectionParams,
+  ListCollectionResult,
+  ListingPrice,
 } from './types';
-
 const DEFAULT_INDEXER_URL = 'https://indexer-production-812c.up.railway.app';
 
 // Pool configuration constants
@@ -174,12 +180,75 @@ export class CC0Strategy {
       // poolId remains empty
     }
 
+    // Register token with indexer so it appears on cc0strategy.fun
+    await this.registerToken({
+      address: tokenAddress,
+      name: params.name,
+      symbol: params.symbol,
+      nftCollection: params.nftCollection,
+      deployer,
+      deployTxHash: txHash,
+      deployBlock: Number(receipt.blockNumber),
+      imageUrl: params.image,
+      description: params.description,
+      poolId,
+    });
+
     return {
       tokenAddress,
       poolId,
       txHash,
       blockNumber: receipt.blockNumber,
     };
+  }
+
+  /**
+   * Register a deployed token with the indexer
+   * This ensures the token appears on cc0strategy.fun
+   */
+  private async registerToken(params: {
+    address: Address;
+    name: string;
+    symbol: string;
+    nftCollection: Address;
+    deployer: Address;
+    deployTxHash: Hash;
+    deployBlock: number;
+    imageUrl: string;
+    description?: string;
+    poolId: Hash;
+  }): Promise<void> {
+    try {
+      const response = await fetch(`${this.indexerUrl}/tokens`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: params.address.toLowerCase(),
+          name: params.name,
+          symbol: params.symbol,
+          decimals: 18,
+          nft_collection: params.nftCollection.toLowerCase(),
+          deployer: params.deployer.toLowerCase(),
+          deploy_tx_hash: params.deployTxHash,
+          deploy_block: params.deployBlock,
+          deployed_at: new Date().toISOString(),
+          image_url: params.imageUrl,
+          description: params.description || null,
+          pool_id: params.poolId,
+          chain: this.chain,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.warn(`[cc0strategy-sdk] Failed to register token: ${error}`);
+      } else {
+        console.log(`[cc0strategy-sdk] Token registered: ${params.symbol}`);
+      }
+    } catch (error) {
+      console.warn('[cc0strategy-sdk] Failed to register token:', error);
+      // Don't throw - deployment succeeded, registration is secondary
+    }
   }
 
   /**
@@ -456,5 +525,86 @@ export class CC0Strategy {
     } catch {
       return { owns: false, balance: 0n };
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // COLLECTION LISTING
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Get the current listing price for collections
+   */
+  async getListingPrice(): Promise<ListingPrice> {
+    const response = await fetch(`${this.indexerUrl}/collections/list/price`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch listing price');
+    }
+    return response.json();
+  }
+
+  /**
+   * List a new NFT collection on cc0strategy
+   * Requires 199 USDC payment (direct transfer, no approval needed)
+   */
+  async listCollection(
+    params: ListCollectionParams
+  ): Promise<ListCollectionResult> {
+    const account = this.walletClient.account;
+    if (!account) {
+      throw new Error('Wallet not connected');
+    }
+
+    const paymentChain = params.paymentChain || params.collectionChain;
+    
+    // Get USDC address for payment chain
+    const usdcAddress = USDC_ADDRESSES[paymentChain];
+    
+    // Check USDC balance
+    const balance = await this.publicClient.readContract({
+      address: usdcAddress,
+      abi: ERC20_ABI,
+      functionName: 'balanceOf',
+      args: [account.address],
+    }) as bigint;
+    
+    if (balance < LISTING_FEE_USDC) {
+      throw new Error(`Insufficient USDC balance. Need 199 USDC, have ${Number(balance) / 1_000_000}`);
+    }
+    
+    // Direct transfer USDC to listing recipient (no approval needed for transfer)
+    const transferTx = await this.walletClient.writeContract({
+      address: usdcAddress,
+      abi: ERC20_ABI,
+      functionName: 'transfer',
+      args: [LISTING_RECIPIENT, LISTING_FEE_USDC],
+      chain: paymentChain === 'base' ? base : mainnet,
+      account,
+    });
+    
+    await this.publicClient.waitForTransactionReceipt({ hash: transferTx });
+    
+    // Register with indexer
+    const response = await fetch(`${this.indexerUrl}/collections/list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        collectionAddress: params.collectionAddress,
+        collectionChain: params.collectionChain,
+        paymentTxHash: transferTx,
+        paymentChain: paymentChain,
+        submitterWallet: account.address,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to list collection');
+    }
+    
+    return {
+      paymentTxHash: transferTx,
+      collection: data.collection,
+    };
   }
 }
