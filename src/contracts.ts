@@ -256,7 +256,7 @@ export const USDC_ADDRESSES = {
 } as const;
 
 // Collection listing fee
-export const LISTING_FEE_USDC = 10_000n; // 0.01 USDC (TESTING)
+export const LISTING_FEE_USDC = 199_000_000n; // 199 USDC (6 decimals)
 export const LISTING_RECIPIENT = '0x58e510F849e38095375a3e478ad1d719650B8557' as Address;
 
 // ERC20 ABI (minimal for approve + transfer)
